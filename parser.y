@@ -1,58 +1,69 @@
-%%
-// Bison parser grammar for C-- language
+/* Bison grammar for C-- compiler */
 
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include "ast.h"
 %}
 
-// Token declarations
-%token <int> NUMBER
-%token <str> IDENTIFIER
-%token PLUS MINUS TIMES DIVIDE
-%token ASSIGN SEMICOLON
+%token INT FLOAT STRING BOOL
+%token ADD SUB MULT DIV
+%token SEMICOLON COMMA LPAREN RPAREN LBRACE RBRACE
 %token IF ELSE WHILE RETURN
-
-// Operator precedence
-%left PLUS MINUS
-%left TIMES DIVIDE
-%nonassoc UMINUS // Unary minus
-%type <int> expression
+%type <node> expression statement
 
 %%
 
-// Grammar rules
 program:
     | program statement
     ;
 
 statement:
-    expression SEMICOLON
-    | IDENTIFIER ASSIGN expression SEMICOLON
-    | IF '(' expression ')' statement
-    | IF '(' expression ')' statement ELSE statement
-    | WHILE '(' expression ')' statement
-    | RETURN expression SEMICOLON
+    expression SEMICOLON {
+        /* Handle the statement */
+    }
+    | IF LPAREN expression RPAREN statement ELSE statement {
+        /* Handle if-else statement */
+    }
+    | WHILE LPAREN expression RPAREN statement {
+        /* Handle while loop */
+    }
+    | RETURN expression SEMICOLON {
+        /* Handle return statement */
+    }
     ;
 
 expression:
-    NUMBER
-    | IDENTIFIER
-    | expression PLUS expression
-    | expression MINUS expression
-    | expression TIMES expression
-    | expression DIVIDE expression
-    | '(' expression ')'
-    | MINUS expression %prec UMINUS
+    INT {
+        $$ = createIntNode($1);
+    }
+    | FLOAT {
+        $$ = createFloatNode($1);
+    }
+    | STRING {
+        $$ = createStringNode($1);
+    }
+    | ADD expression expression {
+        $$ = createAddNode($2, $3);
+    }
+    | SUB expression expression {
+        $$ = createSubNode($2, $3);
+    }
+    | MULT expression expression {
+        $$ = createMultNode($2, $3);
+    }
+    | DIV expression expression {
+        $$ = createDivNode($2, $3);
+    }
     ;
 
 %%
 
-// Error handling
-void yyerror(const char *s) {
-    fprintf(stderr, "Error: %s\n", s);
-}
-
 int main(void) {
     return yyparse();
+}
+
+int yyerror(char *s) {
+    fprintf(stderr, "Error: %s\n", s);
+    return 0;
 }
